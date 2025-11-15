@@ -3,6 +3,13 @@
     "markovian-thinker": {
       "command": "/home/user/markovian-thinker/target/release/markovian-thinker",
       "description": "Markovian Thinker - Chunk-based reasoning with bounded context for linear complexity"
+    },
+    "h2ce": {
+      "command": "/home/user/H2CE/target/release/h2ce-server",
+      "description": "H²CE (Hierarchical Hybrid Context Engine) - Advanced RAG with multi-resolution indexing and polyglot retrieval",
+      "env": {
+        "H2CE_INDEX_PATH": "/home/user/.h2ce_index"
+      }
     }
   }
 }
