@@ -1,0 +1,522 @@
+name: Portfolio Auto-Showcase - Upwork Generator
+
+# 🎯 WHAT THIS DOES:
+# Automatically creates stunning portfolio content for Upwork when you complete features
+# - Takes screenshots/videos of your app automatically
+# - Generates compelling project descriptions
+# - Creates demo GIFs and walkthroughs
+# - Writes Upwork-optimized copy
+# - Suggests pricing and positioning
+#
+# NOVEL APPROACH:
+# Uses headless browser automation + AI to create portfolio-ready content
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'portfolio/**'
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      project_name:
+        description: 'Project to showcase'
+        required: true
+        default: 'sentiment-intelligence-platform'
+
+jobs:
+  generate-portfolio-content:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js for automation
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install automation tools
+        run: |
+          echo "🛠️ Installing portfolio generation tools..."
+
+          # Headless browser automation
+          npm install -g puppeteer playwright
+
+          # Screenshot and video tools
+          sudo apt-get update
+          sudo apt-get install -y \
+            chromium-browser \
+            ffmpeg \
+            imagemagick \
+            gifsicle
+
+          # For creating demo videos
+          npm install -g @ffmpeg-installer/ffmpeg
+
+      - name: Start application in background
+        run: |
+          echo "🚀 Starting application for screenshots..."
+
+          PROJECT="${{ github.event.inputs.project_name || 'sentiment-intelligence-platform' }}"
+
+          cd portfolio/$PROJECT
+
+          # Install dependencies
+          if [ -f package.json ]; then
+            npm install
+          fi
+
+          # Start app in background
+          if [ -f deploy.sh ]; then
+            ./deploy.sh &
+            APP_PID=$!
+            echo "APP_PID=$APP_PID" >> $GITHUB_ENV
+          fi
+
+          # Wait for app to be ready
+          sleep 10
+          curl -f http://localhost:8080 || echo "App starting..."
+          sleep 20
+
+      - name: Generate automated screenshots
+        run: |
+          echo "📸 Taking automated screenshots..."
+
+          # Create Puppeteer script for screenshots
+          cat > screenshot.js <<'SCRIPT'
+          const puppeteer = require('puppeteer');
+
+          (async () => {
+            const browser = await puppeteer.launch({
+              headless: true,
+              args: ['--no-sandbox', '--disable-setuid-sandbox']
+            });
+
+            const page = await browser.newPage();
+            await page.setViewport({ width: 1920, height: 1080 });
+
+            // Dashboard overview
+            await page.goto('http://localhost:8080');
+            await page.waitForTimeout(5000);  // Let animations finish
+            await page.screenshot({ path: 'screenshots/01-dashboard-overview.png', fullPage: true });
+
+            // Interact with UI to show features
+            await page.click('#someFeature');
+            await page.waitForTimeout(2000);
+            await page.screenshot({ path: 'screenshots/02-feature-detail.png' });
+
+            // 3D visualization close-up
+            await page.evaluate(() => {
+              const canvas = document.querySelector('#threejs-container canvas');
+              if (canvas) canvas.scrollIntoView();
+            });
+            await page.waitForTimeout(2000);
+            await page.screenshot({ path: 'screenshots/03-3d-visualization.png' });
+
+            // Business metrics
+            await page.evaluate(() => {
+              const metrics = document.querySelector('.metrics-grid');
+              if (metrics) metrics.scrollIntoView();
+            });
+            await page.waitForTimeout(1000);
+            await page.screenshot({ path: 'screenshots/04-business-metrics.png' });
+
+            // Real-time feed
+            await page.evaluate(() => {
+              const feed = document.querySelector('.feed-container');
+              if (feed) feed.scrollIntoView();
+            });
+            await page.waitForTimeout(1000);
+            await page.screenshot({ path: 'screenshots/05-realtime-feed.png' });
+
+            await browser.close();
+          })();
+          SCRIPT
+
+          mkdir -p screenshots
+          node screenshot.js
+
+      - name: Record demo video
+        run: |
+          echo "🎥 Recording interactive demo video..."
+
+          cat > record-demo.js <<'SCRIPT'
+          const puppeteer = require('puppeteer');
+          const { exec } = require('child_process');
+
+          (async () => {
+            const browser = await puppeteer.launch({
+              headless: false,  // Show browser for recording
+              args: ['--no-sandbox', '--window-size=1920,1080']
+            });
+
+            const page = await browser.newPage();
+            await page.setViewport({ width: 1920, height: 1080 });
+
+            // Start screen recording
+            exec('ffmpeg -video_size 1920x1080 -framerate 30 -f x11grab -i :99 -t 60 demo.mp4');
+
+            // Navigate and interact
+            await page.goto('http://localhost:8080');
+            await page.waitForTimeout(3000);
+
+            // Simulate user interaction
+            await page.type('#input-field', 'This is amazing! I love this product!');
+            await page.waitForTimeout(2000);
+
+            await page.click('#analyze-button');
+            await page.waitForTimeout(5000);
+
+            // Interact with 3D visualization
+            await page.evaluate(() => {
+              // Simulate rotation
+              const canvas = document.querySelector('#threejs-container canvas');
+              if (canvas) {
+                for (let i = 0; i < 10; i++) {
+                  setTimeout(() => window.rotateView(), i * 500);
+                }
+              }
+            });
+
+            await page.waitForTimeout(6000);
+
+            await browser.close();
+          })();
+          SCRIPT
+
+          # Start virtual display for recording
+          Xvfb :99 -screen 0 1920x1080x24 &
+          DISPLAY=:99 node record-demo.js || true
+
+      - name: Create animated GIF
+        run: |
+          echo "🎬 Creating animated GIF from video..."
+
+          if [ -f demo.mp4 ]; then
+            # Convert video to GIF
+            ffmpeg -i demo.mp4 -vf "fps=10,scale=800:-1:flags=lanczos" -c:v gif demo.gif
+
+            # Optimize GIF
+            gifsicle -O3 --colors 256 demo.gif -o demo-optimized.gif
+            mv demo-optimized.gif demo.gif
+          fi
+
+      - name: AI-generate project description
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          echo "✍️ Generating Upwork project description..."
+
+          PROJECT="${{ github.event.inputs.project_name || 'sentiment-intelligence-platform' }}"
+
+          # Analyze project
+          README=$(cat portfolio/$PROJECT/README.md 2>/dev/null || echo "No README")
+          CODE_STATS=$(find portfolio/$PROJECT -name "*.rs" -o -name "*.ts" | wc -l)
+
+          # Generate Upwork-optimized description
+          DESCRIPTION=$(curl -s https://api.openai.com/v1/chat/completions \
+            -H "Authorization: Bearer $OPENAI_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "model": "gpt-4-turbo-preview",
+              "messages": [{
+                "role": "system",
+                "content": "You are an expert at writing compelling Upwork portfolio descriptions that convert views into job offers. Write persuasive, metrics-driven copy that showcases technical skills and business value. Stay under 600 characters for the main description."
+              }, {
+                "role": "user",
+                "content": "Create an Upwork portfolio entry for this project:\n\nProject: '"$PROJECT"'\nREADME: '"$README"'\nFiles: '"$CODE_STATS"' code files\n\nGenerate:\n1. Project title (60 chars max)\n2. Description (600 chars max)\n3. Your role (100 chars max)\n4. Skills (list)\n5. Key achievements (bullet points)\n6. Suggested pricing ($2K-$10K range)\n7. Target client types\n\nFocus on: production-ready, revenue-generating, impressive metrics."
+              }],
+              "response_format": { "type": "json_object" }
+            }' | jq -r '.choices[0].message.content')
+
+          echo "$DESCRIPTION" > upwork-content.json
+
+      - name: Generate compelling copy variations
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          echo "📝 Creating multiple copy variations for A/B testing..."
+
+          # Generate 3 different approaches
+          for STYLE in "technical" "business" "results-focused"; do
+            COPY=$(curl -s https://api.openai.com/v1/chat/completions \
+              -H "Authorization: Bearer $OPENAI_API_KEY" \
+              -H "Content-Type: application/json" \
+              -d '{
+                "model": "gpt-4-turbo-preview",
+                "messages": [{
+                  "role": "user",
+                  "content": "Write an Upwork project description in a '"$STYLE"' style for a sentiment intelligence platform. 600 chars max. Focus on converting viewers to clients."
+                }]
+              }' | jq -r '.choices[0].message.content')
+
+            echo "$COPY" > upwork-copy-$STYLE.txt
+          done
+
+      - name: Analyze competitive positioning
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          echo "🎯 Analyzing market positioning..."
+
+          # Get competitive insights
+          POSITIONING=$(curl -s https://api.openai.com/v1/chat/completions \
+            -H "Authorization: Bearer $OPENAI_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "model": "gpt-4-turbo-preview",
+              "messages": [{
+                "role": "system",
+                "content": "You are a market research expert specializing in developer portfolios and Upwork positioning."
+              }, {
+                "role": "user",
+                "content": "Analyze positioning for a Rust + TypeScript sentiment analysis SaaS platform on Upwork. Provide:\n1. Suggested hourly rate range\n2. Competing skill combinations\n3. Unique selling points\n4. Target client industries\n5. Keywords for discoverability\n6. Common objections and how to overcome them"
+              }],
+              "response_format": { "type": "json_object" }
+            }' | jq -r '.choices[0].message.content')
+
+          echo "$POSITIONING" > market-positioning.json
+
+      - name: Create Upwork submission package
+        run: |
+          echo "📦 Creating complete Upwork submission package..."
+
+          mkdir -p upwork-package
+
+          # Copy all generated assets
+          cp -r screenshots upwork-package/ || true
+          cp demo.gif upwork-package/ || true
+          cp upwork-content.json upwork-package/
+          cp upwork-copy-*.txt upwork-package/ || true
+          cp market-positioning.json upwork-package/
+
+          # Create comprehensive README
+          cat > upwork-package/README.md <<'EOF'
+          # Upwork Portfolio Submission Package
+
+          ## 📸 Screenshots
+
+          Use these high-quality screenshots for your portfolio:
+          - `01-dashboard-overview.png` - Main hero image
+          - `02-feature-detail.png` - Feature showcase
+          - `03-3d-visualization.png` - Technical complexity
+          - `04-business-metrics.png` - Business value
+          - `05-realtime-feed.png` - Real-time capabilities
+
+          ## 🎬 Demo Assets
+
+          - `demo.gif` - Animated demonstration (< 5MB for Upwork)
+
+          ## ✍️ Copy & Paste Content
+
+          See `upwork-content.json` for:
+          - Project title
+          - Description (optimized for 600 char limit)
+          - Your role
+          - Skills list
+          - Key achievements
+
+          ## 🎯 Copy Variations
+
+          Three styles to choose from:
+          - `upwork-copy-technical.txt` - For technical clients
+          - `upwork-copy-business.txt` - For business stakeholders
+          - `upwork-copy-results-focused.txt` - For ROI-focused clients
+
+          ## 💰 Pricing Guidance
+
+          See `market-positioning.json` for:
+          - Suggested pricing range
+          - Hourly rate recommendations
+          - Project value positioning
+
+          ## 🚀 Quick Steps
+
+          1. Upload screenshots to Upwork portfolio
+          2. Add demo.gif as video/animation
+          3. Copy-paste description from upwork-content.json
+          4. Select skills from the list
+          5. Set project value based on recommendations
+          6. Publish!
+
+          EOF
+
+      - name: Generate proposal templates
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          echo "💼 Generating job proposal templates..."
+
+          # Create templates for common job types
+          for JOB_TYPE in "rust-backend" "ml-implementation" "saas-development"; do
+            TEMPLATE=$(curl -s https://api.openai.com/v1/chat/completions \
+              -H "Authorization: Bearer $OPENAI_API_KEY" \
+              -H "Content-Type: application/json" \
+              -d '{
+                "model": "gpt-4-turbo-preview",
+                "messages": [{
+                  "role": "system",
+                  "content": "Write winning Upwork proposals that get hired. Use: personalization, proof of skills, clear timeline, competitive pricing, strong close."
+                }, {
+                  "role": "user",
+                  "content": "Create a proposal template for '"$JOB_TYPE"' jobs. Include:\n1. Engaging opening\n2. Reference to this portfolio project as proof\n3. Specific approach to their needs\n4. Timeline\n5. Pricing structure\n6. Strong CTA\n\nMake it feel personal, not templated."
+                }]
+              }' | jq -r '.choices[0].message.content')
+
+            echo "$TEMPLATE" > upwork-package/proposal-template-$JOB_TYPE.md
+          done
+
+      - name: Create comparison with competitors
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          echo "📊 Creating competitive comparison chart..."
+
+          COMPARISON=$(curl -s https://api.openai.com/v1/chat/completions \
+            -H "Authorization: Bearer $OPENAI_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "model": "gpt-4-turbo-preview",
+              "messages": [{
+                "role": "user",
+                "content": "Create a markdown comparison table showing why hiring me (with this sentiment intelligence platform in my portfolio) is better than competitors. Compare:\n- Portfolio quality\n- Technical skills (Rust + TypeScript + ML)\n- Production readiness\n- Business understanding\n- Pricing competitiveness\n\nMake me look like the obvious choice."
+              }]
+            }' | jq -r '.choices[0].message.content')
+
+          echo "$COMPARISON" > upwork-package/WHY-HIRE-ME.md
+
+      - name: Optimize images for web
+        run: |
+          echo "🖼️ Optimizing images for fast loading..."
+
+          cd screenshots
+
+          # Resize and compress
+          for img in *.png; do
+            # Create web-optimized version
+            convert "$img" -resize 1200x -quality 85 "optimized-$img"
+          done
+
+          # Move optimized versions
+          mv optimized-*.png ../upwork-package/screenshots/ || true
+
+      - name: Create portfolio showcase HTML
+        run: |
+          echo "🌐 Creating interactive portfolio showcase..."
+
+          cat > upwork-package/showcase.html <<'EOF'
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>Portfolio Showcase</title>
+            <style>
+              body { font-family: sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; }
+              .screenshot { width: 100%; margin: 20px 0; border: 1px solid #ddd; }
+              .demo { text-align: center; }
+              .copy-button { background: #14a800; color: white; padding: 10px 20px; border: none; cursor: pointer; }
+            </style>
+          </head>
+          <body>
+            <h1>Portfolio Project Showcase</h1>
+            <div class="demo">
+              <img src="demo.gif" style="max-width: 800px;" alt="Demo">
+            </div>
+            <h2>Screenshots</h2>
+            <img src="screenshots/01-dashboard-overview.png" class="screenshot">
+            <img src="screenshots/02-feature-detail.png" class="screenshot">
+            <h2>Project Description</h2>
+            <div id="description"></div>
+            <button class="copy-button" onclick="copyDescription()">Copy Description</button>
+            <script>
+              fetch('upwork-content.json')
+                .then(r => r.json())
+                .then(data => {
+                  document.getElementById('description').innerText = data.description;
+                });
+              function copyDescription() {
+                // Copy to clipboard
+                alert('Description copied!');
+              }
+            </script>
+          </body>
+          </html>
+          EOF
+
+      - name: Commit portfolio package
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add upwork-package/
+          git commit -m "📸 Auto-generated Upwork portfolio package" || echo "No changes"
+          git push || echo "Nothing to push"
+
+      - name: Create release with assets
+        uses: softprops/action-gh-release@v1
+        if: github.event_name == 'release'
+        with:
+          files: |
+            upwork-package/screenshots/*.png
+            upwork-package/demo.gif
+            upwork-package/*.json
+            upwork-package/*.md
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: upwork-portfolio-package
+          path: upwork-package/
+          retention-days: 90
+
+      - name: Create summary comment
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const summary = `## 🎯 Upwork Portfolio Package Generated!
+
+            Your portfolio content is ready to upload to Upwork!
+
+            ### 📦 Package Contents:
+
+            - ✅ **5 Professional Screenshots** - High-quality, optimized images
+            - ✅ **Animated Demo GIF** - Shows your app in action
+            - ✅ **Project Description** - AI-optimized for Upwork (under 600 chars)
+            - ✅ **3 Copy Variations** - Technical, Business, Results-focused
+            - ✅ **Proposal Templates** - Ready to customize for jobs
+            - ✅ **Market Positioning** - Pricing and competitive analysis
+
+            ### 🚀 Download:
+
+            [Download Portfolio Package](${context.payload.repository.html_url}/actions/runs/${context.runId}#artifacts)
+
+            ### 📋 Next Steps:
+
+            1. Download the artifact above
+            2. Review screenshots and descriptions
+            3. Upload to Upwork portfolio
+            4. Use proposal templates when applying to jobs
+
+            **Estimated Time Saved**: 3-4 hours of manual work!
+
+            ---
+            *Generated by Portfolio Auto-Showcase workflow*`;
+
+            github.rest.repos.createCommitComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.sha,
+              body: summary
+            });
+
+      - name: Cleanup
+        if: always()
+        run: |
+          # Stop the app if it's running
+          if [ -n "$APP_PID" ]; then
+            kill $APP_PID || true
+          fi
+
+          # Clean up temp files
+          rm -f screenshot.js record-demo.js

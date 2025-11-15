@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentiment Intelligence Platform - Real-Time Business Analytics</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border-bottom: 1px solid #334155;
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-stats {
+            display: flex;
+            gap: 32px;
+            align-items: center;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #10b981, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .live-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(16, 185, 129, 0.1);
+            border-radius: 20px;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+
+        /* Main Layout */
+        .dashboard {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 24px;
+            padding: 24px;
+            max-width: 1920px;
+            margin: 0 auto;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: #1e293b;
+            border-radius: 16px;
+            padding: 24px;
+            height: fit-content;
+            border: 1px solid #334155;
+        }
+
+        .sidebar-section {
+            margin-bottom: 32px;
+        }
+
+        .sidebar-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 16px;
+        }
+
+        .data-source {
+            padding: 12px;
+            background: #0f172a;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .data-source:hover {
+            border-color: #3b82f6;
+            transform: translateX(4px);
+        }
+
+        .data-source.active {
+            border-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .source-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .source-icon {
+            font-size: 20px;
+        }
+
+        .source-badge {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        /* Main Content */
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .panel {
+            background: #1e293b;
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid #334155;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .panel-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #f1f5f9;
+        }
+
+        .panel-controls {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            background: #334155;
+            border: 1px solid #475569;
+            border-radius: 8px;
+            color: #e2e8f0;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            background: #475569;
+            border-color: #64748b;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            border: none;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
+        }
+
+        /* 3D Visualization Container */
+        #threejs-container {
+            width: 100%;
+            height: 500px;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+            background: radial-gradient(circle at 50% 50%, #1e293b, #0f172a);
+        }
+
+        .viz-overlay {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid #334155;
+            z-index: 10;
+        }
+
+        .viz-overlay h3 {
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 12px;
+        }
+
+        .viz-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .viz-legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        /* Metrics Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+        }
+
+        .metric-card {
+            background: #0f172a;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #334155;
+            transition: all 0.3s;
+        }
+
+        .metric-card:hover {
+            border-color: #3b82f6;
+            transform: translateY(-4px);
+        }
+
+        .metric-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .metric-title {
+            font-size: 13px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .metric-icon {
+            font-size: 24px;
+        }
+
+        .metric-value {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .metric-change {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+        }
+
+        .metric-change.positive {
+            color: #10b981;
+        }
+
+        .metric-change.negative {
+            color: #ef4444;
+        }
+
+        /* Real-time Feed */
+        .feed-container {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .feed-item {
+            background: #0f172a;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border-left: 4px solid #334155;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .feed-item.positive {
+            border-left-color: #10b981;
+        }
+
+        .feed-item.negative {
+            border-left-color: #ef4444;
+        }
+
+        .feed-item.neutral {
+            border-left-color: #64748b;
+        }
+
+        .feed-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .feed-source {
+            font-size: 12px;
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .feed-time {
+            font-size: 11px;
+            color: #475569;
+        }
+
+        .feed-text {
+            font-size: 14px;
+            color: #cbd5e1;
+            margin-bottom: 8px;
+        }
+
+        .feed-sentiment {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .feed-sentiment.positive {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+
+        .feed-sentiment.negative {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .feed-sentiment.neutral {
+            background: rgba(100, 116, 139, 0.2);
+            color: #94a3b8;
+        }
+
+        /* Charts */
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(59, 130, 246, 0.3);
+            border-radius: 50%;
+            border-top-color: #3b82f6;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="logo">
+            <span>🧠</span>
+            <span>Sentiment Intelligence Platform</span>
+        </div>
+        <div class="header-stats">
+            <div class="stat-item">
+                <div class="stat-value" id="totalAnalyzed">0</div>
+                <div class="stat-label">Analyzed Today</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="avgSentiment">0.00</div>
+                <div class="stat-label">Avg Sentiment</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="npsScore">0</div>
+                <div class="stat-label">NPS Score</div>
+            </div>
+            <div class="live-indicator">
+                <div class="live-dot"></div>
+                <span>Live Monitoring</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Dashboard -->
+    <div class="dashboard">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-title">Data Sources</div>
+                <div class="data-source active" data-source="all">
+                    <div class="source-info">
+                        <span class="source-icon">🌐</span>
+                        <span>All Sources</span>
+                    </div>
+                    <span class="source-badge">Live</span>
+                </div>
+                <div class="data-source" data-source="twitter">
+                    <div class="source-info">
+                        <span class="source-icon">🐦</span>
+                        <span>Twitter/X</span>
+                    </div>
+                    <span class="source-badge">1.2K</span>
+                </div>
+                <div class="data-source" data-source="reviews">
+                    <div class="source-info">
+                        <span class="source-icon">⭐</span>
+                        <span>Reviews</span>
+                    </div>
+                    <span class="source-badge">856</span>
+                </div>
+                <div class="data-source" data-source="support">
+                    <div class="source-info">
+                        <span class="source-icon">💬</span>
+                        <span>Support Tickets</span>
+                    </div>
+                    <span class="source-badge">234</span>
+                </div>
+                <div class="data-source" data-source="news">
+                    <div class="source-info">
+                        <span class="source-icon">📰</span>
+                        <span>News & Media</span>
+                    </div>
+                    <span class="source-badge">445</span>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">Time Range</div>
+                <select class="btn" style="width: 100%;" id="timeRange">
+                    <option value="1h">Last Hour</option>
+                    <option value="24h" selected>Last 24 Hours</option>
+                    <option value="7d">Last 7 Days</option>
+                    <option value="30d">Last 30 Days</option>
+                </select>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">Quick Actions</div>
+                <button class="btn btn-primary" style="width: 100%; margin-bottom: 8px;" onclick="generateReport()">
+                    📊 Generate Report
+                </button>
+                <button class="btn" style="width: 100%; margin-bottom: 8px;" onclick="exportData()">
+                    📥 Export Data
+                </button>
+                <button class="btn" style="width: 100%;" onclick="configureAlerts()">
+                    🔔 Configure Alerts
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- 3D Visualization -->
+            <div class="panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">3D Sentiment Timeline Visualization</h2>
+                    <div class="panel-controls">
+                        <button class="btn" onclick="rotateView()">🔄 Rotate</button>
+                        <button class="btn" onclick="resetView()">↺ Reset View</button>
+                    </div>
+                </div>
+                <div id="threejs-container">
+                    <div class="viz-overlay">
+                        <h3>Legend</h3>
+                        <div class="viz-legend-item">
+                            <div class="viz-legend-dot" style="background: #10b981;"></div>
+                            <span>Positive Sentiment</span>
+                        </div>
+                        <div class="viz-legend-item">
+                            <div class="viz-legend-dot" style="background: #ef4444;"></div>
+                            <span>Negative Sentiment</span>
+                        </div>
+                        <div class="viz-legend-item">
+                            <div class="viz-legend-dot" style="background: #64748b;"></div>
+                            <span>Neutral Sentiment</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Key Metrics -->
+            <div class="panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">Key Performance Indicators</h2>
+                    <div class="loading"></div>
+                </div>
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <div class="metric-title">Customer Satisfaction</div>
+                            <div class="metric-icon">😊</div>
+                        </div>
+                        <div class="metric-value" style="background: linear-gradient(135deg, #10b981, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                            87.3%
+                        </div>
+                        <div class="metric-change positive">
+                            <span>↑</span>
+                            <span>+5.2% vs last week</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <div class="metric-title">Response Time</div>
+                            <div class="metric-icon">⚡</div>
+                        </div>
+                        <div class="metric-value" style="background: linear-gradient(135deg, #f59e0b, #ef4444); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                            2.3ms
+                        </div>
+                        <div class="metric-change positive">
+                            <span>↓</span>
+                            <span>12% faster</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <div class="metric-title">Alert Triggers</div>
+                            <div class="metric-icon">🔔</div>
+                        </div>
+                        <div class="metric-value" style="background: linear-gradient(135deg, #ef4444, #dc2626); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                            12
+                        </div>
+                        <div class="metric-change negative">
+                            <span>↑</span>
+                            <span>Requires attention</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <div class="metric-title">Data Processed</div>
+                            <div class="metric-icon">📊</div>
+                        </div>
+                        <div class="metric-value" style="background: linear-gradient(135deg, #8b5cf6, #6366f1); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                            2.8K
+                        </div>
+                        <div class="metric-change positive">
+                            <span>↑</span>
+                            <span>+23% volume</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">Sentiment Trend (24h)</h2>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="trendChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">Source Distribution</h2>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="sourceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Real-time Feed -->
+            <div class="panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">Real-Time Sentiment Feed</h2>
+                    <div class="panel-controls">
+                        <button class="btn" onclick="pauseFeed()">⏸ Pause</button>
+                        <button class="btn" onclick="clearFeed()">🗑 Clear</button>
+                    </div>
+                </div>
+                <div class="feed-container" id="feedContainer">
+                    <!-- Feed items will be added here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TypeScript compiled to JavaScript -->
+    <script type="module" src="dist/app.js"></script>
+</body>
+</html>

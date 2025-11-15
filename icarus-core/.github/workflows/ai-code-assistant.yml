@@ -1,0 +1,123 @@
+name: AI Code Assistant
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+  issue_comment:
+    types: [created]
+
+jobs:
+  ai-code-review:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: AI Code Review
+        uses: anc95/ChatGPT-CodeReview@main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        with:
+          model: gpt-4
+          review_comment: true
+          max_files: 10
+
+      - name: Run complexity analysis
+        run: |
+          # Analyze code complexity
+          cargo install cargo-complexity || true
+          cd portfolio/rustml-sentiment-api
+          cargo complexity --json > complexity.json || true
+
+      - name: Suggest improvements
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const complexity = JSON.parse(fs.readFileSync('portfolio/rustml-sentiment-api/complexity.json', 'utf8'));
+
+            const suggestions = complexity
+              .filter(f => f.complexity > 10)
+              .map(f => `- \`${f.name}\`: complexity ${f.complexity} - consider refactoring`)
+              .join('\n');
+
+            if (suggestions) {
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: `## 🤖 AI Code Analysis\n\nHigh complexity functions detected:\n\n${suggestions}`
+              });
+            }
+
+  auto-generate-tests:
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'issue_comment' &&
+      contains(github.event.comment.body, '/generate-tests')
+
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Generate tests with AI
+        run: |
+          # This would use an AI API to generate tests
+          # For example, using OpenAI API or GitHub Copilot
+          echo "Generating tests for changed files..."
+
+      - name: Create PR with generated tests
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "🤖 AI-generated tests"
+          title: "test: Add AI-generated test cases"
+          body: |
+            Auto-generated tests using AI.
+
+            Generated based on code analysis.
+          branch: auto/ai-generated-tests
+
+  auto-refactor:
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'issue_comment' &&
+      contains(github.event.comment.body, '/refactor')
+
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Run auto-refactoring
+        run: |
+          # Install refactoring tools
+          cargo install cargo-geiger  # Security audit
+          cargo install cargo-outdated  # Check outdated deps
+
+          cd portfolio/rustml-sentiment-api
+
+          # Auto-refactor patterns
+          # 1. Extract long functions
+          # 2. Remove duplicate code
+          # 3. Simplify complex logic
+          # 4. Apply clippy suggestions
+          cargo clippy --fix --allow-dirty --allow-staged
+
+      - name: Create PR
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "♻️ Auto-refactor code"
+          title: "refactor: AI-suggested improvements"
+          branch: auto/refactor

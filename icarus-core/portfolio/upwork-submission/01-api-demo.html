@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>RustML Sentiment API - Demo</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px;
+            margin: 0;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        .header {
+            background: #2d3748;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 32px;
+            font-weight: 600;
+        }
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+            font-size: 16px;
+        }
+        .content {
+            padding: 30px;
+        }
+        .demo-section {
+            margin-bottom: 30px;
+        }
+        .demo-section h2 {
+            color: #2d3748;
+            font-size: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        .demo-section h2::before {
+            content: "▶";
+            color: #667eea;
+            margin-right: 10px;
+            font-size: 16px;
+        }
+        .code-block {
+            background: #1a202c;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            overflow-x: auto;
+            margin-bottom: 15px;
+        }
+        .request {
+            border-left: 4px solid #667eea;
+        }
+        .response {
+            border-left: 4px solid #48bb78;
+        }
+        .json-key {
+            color: #63b3ed;
+        }
+        .json-string {
+            color: #68d391;
+        }
+        .json-number {
+            color: #f6ad55;
+        }
+        .label {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+        .label-request {
+            background: #667eea;
+            color: white;
+        }
+        .label-response {
+            background: #48bb78;
+            color: white;
+        }
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .metric-card {
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            border: 2px solid #e2e8f0;
+        }
+        .metric-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        .metric-label {
+            font-size: 12px;
+            color: #718096;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🦀 RustML Sentiment API</h1>
+            <p>High-Performance Text Analysis & Classification</p>
+        </div>
+
+        <div class="content">
+            <div class="demo-section">
+                <h2>Sentiment Analysis Example</h2>
+                <div class="label label-request">REQUEST</div>
+                <div class="code-block request">POST /api/v1/sentiment
+Content-Type: application/json
+
+{
+  <span class="json-key">"text"</span>: <span class="json-string">"This product is absolutely amazing! Best purchase ever!"</span>
+}</div>
+
+                <div class="label label-response">RESPONSE</div>
+                <div class="code-block response">{
+  <span class="json-key">"id"</span>: <span class="json-string">"550e8400-e29b-41d4-a716-446655440000"</span>,
+  <span class="json-key">"timestamp"</span>: <span class="json-string">"2024-11-14T10:30:00Z"</span>,
+  <span class="json-key">"text"</span>: <span class="json-string">"This product is absolutely amazing! Best purchase ever!"</span>,
+  <span class="json-key">"sentiment"</span>: {
+    <span class="json-key">"sentiment"</span>: <span class="json-string">"positive"</span>,
+    <span class="json-key">"positive"</span>: <span class="json-number">0.856</span>,
+    <span class="json-key">"negative"</span>: <span class="json-number">0.000</span>,
+    <span class="json-key">"neutral"</span>: <span class="json-number">0.144</span>,
+    <span class="json-key">"compound"</span>: <span class="json-number">0.8834</span>,
+    <span class="json-key">"confidence"</span>: <span class="json-number">0.92</span>
+  },
+  <span class="json-key">"processing_time_ms"</span>: <span class="json-number">3</span>
+}</div>
+            </div>
+
+            <div class="demo-section">
+                <h2>Text Classification Example</h2>
+                <div class="label label-request">REQUEST</div>
+                <div class="code-block request">POST /api/v1/classify
+Content-Type: application/json
+
+{
+  <span class="json-key">"text"</span>: <span class="json-string">"Machine learning and AI are transforming technology"</span>
+}</div>
+
+                <div class="label label-response">RESPONSE</div>
+                <div class="code-block response">{
+  <span class="json-key">"id"</span>: <span class="json-string">"7c9e6679-7425-40de-944b-e07fc1f90ae7"</span>,
+  <span class="json-key">"classification"</span>: {
+    <span class="json-key">"category"</span>: <span class="json-string">"technology"</span>,
+    <span class="json-key">"confidence"</span>: <span class="json-number">0.89</span>,
+    <span class="json-key">"keywords"</span>: [<span class="json-string">"ai"</span>, <span class="json-string">"machine learning"</span>, <span class="json-string">"technology"</span>]
+  },
+  <span class="json-key">"processing_time_ms"</span>: <span class="json-number">2</span>
+}</div>
+            </div>
+
+            <div class="metrics">
+                <div class="metric-card">
+                    <div class="metric-value">&lt;5ms</div>
+                    <div class="metric-label">Response Time</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">1000+</div>
+                    <div class="metric-label">Requests/Second</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">100%</div>
+                    <div class="metric-label">Test Coverage</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

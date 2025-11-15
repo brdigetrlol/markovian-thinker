@@ -1,0 +1,30 @@
+[Unit]
+Description=Icarus Autonomous Cognitive Architecture
+Documentation=https://github.com/yourusername/icarus
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/mnt/c/Users/brdig/Documents/DriveSync/Software/repos-pxl/mcp/workspace/icarus-core
+ExecStart=/mnt/c/Users/brdig/Documents/DriveSync/Software/repos-pxl/mcp/workspace/icarus-core/target/release/icarus-autonomous
+Restart=on-failure
+RestartSec=10s
+StandardOutput=append:/var/log/icarus-autonomous.log
+StandardError=append:/var/log/icarus-autonomous.log
+
+# CUDA environment variables
+Environment="PATH=/usr/local/cuda-12.6/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+Environment="LD_LIBRARY_PATH=/usr/local/cuda-12.6/lib64"
+
+# Resource limits
+LimitNOFILE=65536
+MemoryMax=4G
+CPUQuota=200%
+
+# Security settings (adjust as needed)
+PrivateTmp=true
+NoNewPrivileges=false
+
+[Install]
+WantedBy=multi-user.target

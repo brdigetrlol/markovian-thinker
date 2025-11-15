@@ -1,0 +1,55 @@
+[package]
+name = "rustml-sentiment-api"
+version = "0.1.0"
+edition = "2021"
+authors = ["Cody Moore <cody.moore@outlook.com>"]
+description = "High-performance Rust-based Sentiment Analysis & Text Classification REST API with ML models"
+license = "MIT"
+keywords = ["machine-learning", "sentiment-analysis", "nlp", "api", "rust"]
+categories = ["web-programming", "science"]
+
+[dependencies]
+# Web framework - Modern async web framework
+axum = { version = "0.7", features = ["macros"] }
+tokio = { version = "1.40", features = ["full"] }
+tower = { version = "0.4", features = ["limit", "buffer"] }
+tower-http = { version = "0.5", features = ["trace", "cors", "compression-gzip"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Error handling
+anyhow = "1.0"
+thiserror = "1.0"
+
+# Logging and tracing
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# ML/NLP dependencies
+# Using VADER (Valence Aware Dictionary and sEntiment Reasoner) algorithm
+# Lightweight and fast for real-time sentiment analysis
+vader_sentiment = "0.1"
+
+# Text processing
+regex = "1.10"
+unicode-segmentation = "1.11"
+
+# Rate limiting and security
+governor = "0.6"
+
+# Utilities
+uuid = { version = "1.10", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+
+# HTTP client for external API examples
+reqwest = { version = "0.11", features = ["json"] }
+
+[dev-dependencies]
+tokio-test = "0.4"
+httpmock = "0.7"
+
+[[bin]]
+name = "rustml-api"
+path = "src/main.rs"

@@ -1,0 +1,71 @@
+name: Auto Generate Documentation
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'portfolio/rustml-sentiment-api/src/**'
+      - 'portfolio/sentiment-intelligence-platform/**/*.ts'
+
+jobs:
+  generate-docs:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Generate Rust docs
+        run: |
+          cd portfolio/rustml-sentiment-api
+          cargo doc --no-deps --document-private-items
+          mkdir -p ../../docs/rust-api
+          cp -r target/doc/* ../../docs/rust-api/
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Generate TypeScript docs
+        run: |
+          cd portfolio/sentiment-intelligence-platform
+          npm install -g typedoc
+          typedoc --out ../../docs/typescript app.ts
+
+      - name: Generate API documentation
+        run: |
+          # Extract API endpoints from code
+          echo "# API Documentation" > docs/API.md
+          echo "" >> docs/API.md
+          echo "Auto-generated from source code" >> docs/API.md
+          echo "" >> docs/API.md
+
+          # Find all route definitions
+          grep -r "POST\|GET\|PUT\|DELETE" portfolio/rustml-sentiment-api/src/routes.rs | \
+            sed 's/.*"\(.*\)".*/- `\1`/' >> docs/API.md
+
+      - name: Commit documentation
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/
+          git diff --quiet && git diff --staged --quiet || (
+            git commit -m "📚 Auto-update documentation"
+            git push
+          )
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs
+          publish_branch: gh-pages

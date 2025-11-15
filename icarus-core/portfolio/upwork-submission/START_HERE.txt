@@ -1,0 +1,110 @@
+╔══════════════════════════════════════════════════════════════════╗
+║                                                                  ║
+║     🚀 AUTOMATED UPWORK PORTFOLIO SETUP                         ║
+║                                                                  ║
+║     Total Time: 3-4 minutes                                     ║
+║                                                                  ║
+╚══════════════════════════════════════════════════════════════════╝
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  OPTION 1: INTERACTIVE DEMO (MOST IMPRESSIVE!) 🌟🌟🌟
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  1. Open: INTERACTIVE-DEMO.html
+  2. Play with it - type text and see real-time analysis!
+  3. Record a GIF/video OR take screenshots while using it
+  4. Upload to Upwork
+  5. Add as a LIVE LINK in your portfolio!
+
+  Why this is best:
+  - Actually works! Clients can try it themselves
+  - Shows animations and real-time processing
+  - Much more engaging than static images
+  - Can be deployed as a live website
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  OPTION 2: FULLY AUTOMATED (EASIEST!) ⭐⭐⭐
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Windows Users:
+  --------------
+  1. Double-click: setup.bat
+  2. Follow the prompts
+  3. Done!
+
+  Linux/Mac Users:
+  ----------------
+  1. Open terminal in this folder
+  2. Run: ./setup.sh
+  3. Follow the prompts
+  4. Done!
+
+  What it does:
+  - Opens all HTML files in your browser automatically
+  - Guides you through taking screenshots
+  - Opens the form content for copy-pasting
+  - Opens Upwork in your browser
+  - Copies GitHub link to clipboard
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  OPTION 3: SUPER QUICK (1 SCREENSHOT!) ⭐⭐
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  1. Open: 00-all-in-one.html
+  2. Press F11 (fullscreen)
+  3. Take ONE screenshot (Win+Shift+S)
+  4. Upload to Upwork
+  5. Copy text from UPWORK_FORM_CONTENT.txt
+  6. Done!
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  OPTION 4: MANUAL (ORIGINAL METHOD)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  1. Open each HTML file (01, 02, 03, 04)
+  2. Screenshot each one
+  3. Read UPWORK_FORM_CONTENT.txt
+  4. Copy-paste into Upwork form
+  5. Upload screenshots
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  📋 WHAT YOU'LL NEED
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ✓ Upwork account (logged in)
+  ✓ 2-3 minutes to take screenshots
+  ✓ 2-3 minutes to fill out the form
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  🎯 QUICK LINKS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Upwork Portfolio:
+  https://www.upwork.com/freelancers/settings/portfolio
+
+  GitHub Repository:
+  https://github.com/brdigetrlol/icarus-core/tree/main/portfolio/rustml-sentiment-api
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ℹ️  HELP
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  For detailed instructions: See README.md
+  For quick reference: See QUICK_REFERENCE.txt
+  For form content: See UPWORK_FORM_CONTENT.txt
+
+
+╔══════════════════════════════════════════════════════════════════╗
+║                                                                  ║
+║  👉 BEST FOR UPWORK: Use OPTION 1 (INTERACTIVE-DEMO.html)       ║
+║                                                                  ║
+║  It's interactive, engaging, and shows your work in action!     ║
+║                                                                  ║
+╚══════════════════════════════════════════════════════════════════╝

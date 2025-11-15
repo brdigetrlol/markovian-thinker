@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "markovian-thinker": {
+      "command": "/mnt/c/Users/brdig/Documents/DriveSync/Software/repos-pxl/mcp/workspace/markovian-thinker/target/release/markovian-thinker",
+      "description": "Markovian Thinker - Chunk-based reasoning with bounded context for linear complexity. Implements the Delethink paradigm from 'The Markovian Thinker' paper (arXiv:2510.06557).",
+      "capabilities": {
+        "tools": true,
+        "resources": true
+      }
+    }
+  }
+}

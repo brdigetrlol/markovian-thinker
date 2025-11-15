@@ -1,0 +1,66 @@
+name: Auto Test & Lint
+
+on:
+  push:
+    branches: [ main, claude/** ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-rust:
+    runs-on: ubuntu-latest
+    # OR use self-hosted:
+    # runs-on: self-hosted
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Run tests
+        run: |
+          cd portfolio/rustml-sentiment-api
+          cargo test --verbose
+
+      - name: Run clippy (linter)
+        run: |
+          cd portfolio/rustml-sentiment-api
+          cargo clippy -- -D warnings
+
+      - name: Check formatting
+        run: |
+          cd portfolio/rustml-sentiment-api
+          cargo fmt -- --check
+
+      - name: Build release
+        run: |
+          cd portfolio/rustml-sentiment-api
+          cargo build --release
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '✅ All tests passed! Build succeeded.'
+            })

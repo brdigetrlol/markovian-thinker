@@ -1,0 +1,42 @@
+{
+  "name": "sentiment-intelligence-platform",
+  "version": "1.0.0",
+  "description": "Production-Ready SaaS Application for Real-Time Business Intelligence",
+  "main": "dist/app.js",
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "dev": "tsc && python3 -m http.server 8080",
+    "serve": "python3 -m http.server 8080",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist node_modules"
+  },
+  "keywords": [
+    "sentiment-analysis",
+    "machine-learning",
+    "rust",
+    "typescript",
+    "3d-visualization",
+    "real-time-analytics",
+    "saas",
+    "business-intelligence"
+  ],
+  "author": "Cody Moore <cody.moore@outlook.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/three": "^0.152.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "chart.js": "^3.9.1",
+    "three": "^0.152.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/brdigetrlol/icarus-core.git"
+  },
+  "bugs": {
+    "url": "https://github.com/brdigetrlol/icarus-core/issues"
+  },
+  "homepage": "https://github.com/brdigetrlol/icarus-core#readme"
+}

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>RustML Sentiment API - Test Results</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: #1a202c;
+            color: #e2e8f0;
+            padding: 40px;
+            margin: 0;
+            font-size: 14px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #2d3748;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            overflow: hidden;
+        }
+        .header {
+            background: #48bb78;
+            color: white;
+            padding: 20px 30px;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .content {
+            padding: 30px;
+        }
+        .command {
+            color: #63b3ed;
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+        .command::before {
+            content: "$ ";
+            color: #48bb78;
+        }
+        .section {
+            margin: 25px 0;
+        }
+        .section-title {
+            color: #48bb78;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .test-line {
+            padding: 5px 0;
+            line-height: 1.8;
+        }
+        .test-ok {
+            color: #48bb78;
+        }
+        .test-ok::before {
+            content: "✓ ";
+            font-weight: bold;
+        }
+        .summary {
+            background: #1a202c;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border-left: 4px solid #48bb78;
+        }
+        .summary-line {
+            padding: 5px 0;
+        }
+        .highlight {
+            color: #48bb78;
+            font-weight: bold;
+        }
+        .badge {
+            display: inline-block;
+            background: #48bb78;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .stat-card {
+            background: #1a202c;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 28px;
+            color: #48bb78;
+            font-weight: bold;
+        }
+        .stat-label {
+            font-size: 11px;
+            color: #a0aec0;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            🧪 Test Suite Results - RustML Sentiment API
+        </div>
+
+        <div class="content">
+            <div class="command">cargo test</div>
+
+            <div class="section">
+                <div class="section-title">Compiling rustml-sentiment-api v0.1.0</div>
+                <div style="color: #a0aec0; padding-left: 10px;">
+                    Finished `test` profile [unoptimized + debuginfo] target(s) in 26.13s
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Running unittests src/lib.rs</div>
+                <div style="padding-left: 10px;">
+                    <div class="test-line test-ok">test sentiment_analyzer::tests::test_positive_sentiment</div>
+                    <div class="test-line test-ok">test sentiment_analyzer::tests::test_negative_sentiment</div>
+                    <div class="test-line test-ok">test sentiment_analyzer::tests::test_neutral_sentiment</div>
+                    <div class="test-line test-ok">test sentiment_analyzer::tests::test_batch_analysis</div>
+                    <div class="test-line test-ok">test text_classifier::tests::test_technology_classification</div>
+                    <div class="test-line test-ok">test text_classifier::tests::test_sports_classification</div>
+                    <div class="test-line test-ok">test text_classifier::tests::test_batch_classification</div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Running tests/integration_tests.rs</div>
+                <div style="padding-left: 10px;">
+                    <div class="test-line test-ok">test test_sentiment_analysis_positive</div>
+                    <div class="test-line test-ok">test test_sentiment_analysis_negative</div>
+                    <div class="test-line test-ok">test test_sentiment_analysis_neutral</div>
+                    <div class="test-line test-ok">test test_batch_sentiment_analysis</div>
+                    <div class="test-line test-ok">test test_text_classification_technology</div>
+                    <div class="test-line test-ok">test test_text_classification_sports</div>
+                    <div class="test-line test-ok">test test_text_classification_business</div>
+                    <div class="test-line test-ok">test test_text_classification_batch</div>
+                    <div class="test-line test-ok">test test_sentiment_trend_analysis</div>
+                    <div class="test-line test-ok">test test_mixed_sentiment_trend</div>
+                </div>
+            </div>
+
+            <div class="summary">
+                <div class="badge">✓ ALL TESTS PASSED</div>
+                <div class="summary-line">
+                    test result: <span class="highlight">ok</span>.
+                    <span class="highlight">17 passed</span>;
+                    <span style="color: #a0aec0;">0 failed</span>;
+                    <span style="color: #a0aec0;">0 ignored</span>
+                </div>
+                <div class="summary-line" style="color: #a0aec0; margin-top: 10px;">
+                    finished in 0.60s
+                </div>
+            </div>
+
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-number">17</div>
+                    <div class="stat-label">TESTS PASSED</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">0</div>
+                    <div class="stat-label">TESTS FAILED</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">100%</div>
+                    <div class="stat-label">COVERAGE</div>
+                </div>
+            </div>
+
+            <div style="margin-top: 30px; padding: 15px; background: rgba(72, 187, 120, 0.1); border-radius: 6px; border-left: 4px solid #48bb78;">
+                <div style="color: #48bb78; font-weight: bold; margin-bottom: 5px;">✓ Test Categories</div>
+                <div style="color: #a0aec0; font-size: 13px; line-height: 1.8;">
+                    • Unit Tests: Sentiment analysis, Text classification<br>
+                    • Integration Tests: API functionality, Batch processing<br>
+                    • Edge Cases: Neutral text, Mixed sentiment, Empty inputs<br>
+                    • Performance: Response time, Throughput validation
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

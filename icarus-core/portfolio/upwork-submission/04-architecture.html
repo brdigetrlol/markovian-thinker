@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>RustML Sentiment API - Architecture</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f4f8;
+            padding: 40px;
+            margin: 0;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 32px;
+            font-weight: 700;
+        }
+        .content {
+            padding: 40px;
+        }
+        .architecture-diagram {
+            margin: 30px 0;
+        }
+        .layer {
+            margin: 20px 0;
+        }
+        .layer-title {
+            background: #667eea;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+        .components {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            padding-left: 20px;
+        }
+        .component {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            transition: all 0.3s;
+        }
+        .component:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+        .component-name {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        .component-desc {
+            font-size: 12px;
+            color: #718096;
+            line-height: 1.5;
+        }
+        .flow-arrow {
+            text-align: center;
+            color: #667eea;
+            font-size: 24px;
+            margin: 10px 0;
+        }
+        .tech-stack {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-top: 30px;
+        }
+        .tech-category {
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        .tech-category h3 {
+            margin: 0 0 15px 0;
+            color: #2d3748;
+            font-size: 16px;
+        }
+        .tech-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .tech-list li {
+            padding: 6px 0;
+            color: #718096;
+            font-size: 14px;
+        }
+        .tech-list li::before {
+            content: "▸";
+            color: #667eea;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏗️ System Architecture</h1>
+            <p style="margin: 10px 0 0 0; opacity: 0.9;">RustML Sentiment API</p>
+        </div>
+
+        <div class="content">
+            <div class="architecture-diagram">
+                <div class="layer">
+                    <div class="layer-title">🌐 API Layer (Axum Framework)</div>
+                    <div class="components">
+                        <div class="component">
+                            <div class="component-name">Route Handlers</div>
+                            <div class="component-desc">RESTful endpoints with type-safe routing</div>
+                        </div>
+                        <div class="component">
+                            <div class="component-name">Middleware</div>
+                            <div class="component-desc">CORS, compression, tracing, rate limiting</div>
+                        </div>
+                        <div class="component">
+                            <div class="component-name">Request Validation</div>
+                            <div class="component-desc">Input sanitization and length checks</div>
+                        </div>
+                        <div class="component">
+                            <div class="component-name">Error Handling</div>
+                            <div class="component-desc">Typed errors with proper HTTP status codes</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-arrow">↓</div>
+
+                <div class="layer">
+                    <div class="layer-title">🧠 Business Logic Layer</div>
+                    <div class="components">
+                        <div class="component">
+                            <div class="component-name">Sentiment Analyzer</div>
+                            <div class="component-desc">VADER ML algorithm with custom lexicon</div>
+                        </div>
+                        <div class="component">
+                            <div class="component-name">Text Classifier</div>
+                            <div class="component-desc">Keyword-based classification engine</div>
+                        </div>
+                        <div class="component">
+                            <div class="component-name">Batch Processor</div>
+                            <div class="component-desc">Efficient multi-text analysis</div>
+                        </div>
+                        <div class="component">
+                            <div class="component-name">Trend Analyzer</div>
+                            <div class="component-desc">Aggregate sentiment analysis</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-arrow">↓</div>
+
+                <div class="layer">
+                    <div class="layer-title">🔧 Core Processing</div>
+                    <div class="components">
+                        <div class="component">
+                            <div class="component-name">Text Preprocessing</div>
+                            <div class="component-desc">Tokenization, normalization, cleaning</div>
+                        </div>
+                        <div class="component">
+                            <div class="component-name">ML Models</div>
+                            <div class="component-desc">VADER sentiment scoring algorithms</div>
+                        </div>
+                        <div class="component">
+                            <div class="component-name">Feature Extraction</div>
+                            <div class="component-desc">Keyword matching, pattern detection</div>
+                        </div>
+                        <div class="component">
+                            <div class="component-name">Score Calculation</div>
+                            <div class="component-desc">Confidence scoring and classification</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-arrow">↓</div>
+
+                <div class="layer">
+                    <div class="layer-title">📊 Data & Monitoring</div>
+                    <div class="components">
+                        <div class="component">
+                            <div class="component-name">Statistics Tracking</div>
+                            <div class="component-desc">Request counters, performance metrics</div>
+                        </div>
+                        <div class="component">
+                            <div class="component-name">Health Monitoring</div>
+                            <div class="component-desc">Service health and uptime tracking</div>
+                        </div>
+                        <div class="component">
+                            <div class="component-name">Logging & Tracing</div>
+                            <div class="component-desc">Structured logging with tracing crate</div>
+                        </div>
+                        <div class="component">
+                            <div class="component-name">Response Formatting</div>
+                            <div class="component-desc">JSON serialization with Serde</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tech-stack">
+                <div class="tech-category">
+                    <h3>🦀 Core Technologies</h3>
+                    <ul class="tech-list">
+                        <li>Rust 1.70+ (Memory-safe systems programming)</li>
+                        <li>Tokio (Async runtime)</li>
+                        <li>Axum 0.7 (Web framework)</li>
+                        <li>VADER (Sentiment analysis ML)</li>
+                        <li>Serde (Serialization)</li>
+                    </ul>
+                </div>
+
+                <div class="tech-category">
+                    <h3>🛠️ Infrastructure</h3>
+                    <ul class="tech-list">
+                        <li>Docker (Containerization)</li>
+                        <li>Multi-stage builds (Optimization)</li>
+                        <li>Tower-HTTP (Middleware)</li>
+                        <li>Tracing (Observability)</li>
+                        <li>Cargo (Build system & testing)</li>
+                    </ul>
+                </div>
+
+                <div class="tech-category">
+                    <h3>📦 Key Features</h3>
+                    <ul class="tech-list">
+                        <li>Async/await concurrency model</li>
+                        <li>Zero-copy serialization</li>
+                        <li>Type-safe error handling</li>
+                        <li>Trait-based polymorphism</li>
+                        <li>Comprehensive test coverage</li>
+                    </ul>
+                </div>
+
+                <div class="tech-category">
+                    <h3>🚀 Production Ready</h3>
+                    <ul class="tech-list">
+                        <li>Rate limiting & throttling</li>
+                        <li>CORS configuration</li>
+                        <li>Request validation</li>
+                        <li>Health checks</li>
+                        <li>Graceful shutdown</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

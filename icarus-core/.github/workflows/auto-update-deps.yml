@@ -1,0 +1,95 @@
+name: Auto Update Dependencies
+
+on:
+  schedule:
+    # Run every Monday at 9 AM
+    - cron: '0 9 * * 1'
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  update-rust-deps:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Install cargo-edit
+        run: cargo install cargo-edit
+
+      - name: Update Rust dependencies
+        run: |
+          cd portfolio/rustml-sentiment-api
+          cargo update
+          cargo upgrade --incompatible
+
+      - name: Run tests
+        run: |
+          cd portfolio/rustml-sentiment-api
+          cargo test
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "🔄 Update Rust dependencies"
+          title: "chore: Update Rust dependencies"
+          body: |
+            Automated dependency updates from GitHub Actions.
+
+            Updated packages:
+            - Check Cargo.lock for details
+
+            All tests passed ✅
+          branch: auto/update-rust-deps
+          delete-branch: true
+
+  update-npm-deps:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Update npm dependencies
+        run: |
+          cd portfolio/sentiment-intelligence-platform
+          npm update
+          npx npm-check-updates -u
+          npm install
+
+      - name: Build project
+        run: |
+          cd portfolio/sentiment-intelligence-platform
+          npm run build
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "🔄 Update npm dependencies"
+          title: "chore: Update npm dependencies"
+          body: |
+            Automated npm dependency updates.
+
+            All builds successful ✅
+          branch: auto/update-npm-deps
+          delete-branch: true

@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  icarus-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: icarus-mcp-http:latest
+    container_name: icarus-mcp-server
+    ports:
+      - "3000:3000"
+    environment:
+      - RUST_LOG=info
+      - ICARUS_CONFIG=/home/icarus/icarus-config.toml
+    volumes:
+      - ./icarus-config.toml:/home/icarus/icarus-config.toml:ro
+      - icarus-logs:/home/icarus/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+volumes:
+  icarus-logs:
+    driver: local

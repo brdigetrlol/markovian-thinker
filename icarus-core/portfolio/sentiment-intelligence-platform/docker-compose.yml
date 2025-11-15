@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  # Frontend - Sentiment Intelligence Platform
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sentiment-platform
+    ports:
+      - "8080:80"
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - sentiment-network
+    labels:
+      - "com.sentiment.platform=frontend"
+      - "com.sentiment.version=1.0.0"
+
+  # Rust API Backend (optional - connect to existing)
+  rustml-api:
+    image: rustml-sentiment-api:latest
+    container_name: rustml-api
+    ports:
+      - "3000:3000"
+    environment:
+      - RUST_LOG=info
+      - BIND_ADDRESS=0.0.0.0:3000
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    networks:
+      - sentiment-network
+    profiles:
+      - with-api
+    labels:
+      - "com.sentiment.platform=backend"
+      - "com.sentiment.version=1.0.0"
+
+networks:
+  sentiment-network:
+    driver: bridge
+    name: sentiment-network
+
+volumes:
+  api-data:
+    name: sentiment-api-data

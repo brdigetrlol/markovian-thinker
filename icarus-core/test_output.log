@@ -1,0 +1,8 @@
+[2m2025-10-28T14:11:17.712600Z[0m [32m INFO[0m Stdin EOF, reader exiting
+[2m2025-10-28T14:11:17.712644Z[0m [32m INFO[0m Reader task exiting
+[2m2025-10-28T14:11:17.712042Z[0m [32m INFO[0m 🧠 Markovian Thinker MCP Server
+[2m2025-10-28T14:11:17.712775Z[0m [32m INFO[0m Version: 0.1.0
+[2m2025-10-28T14:11:17.712778Z[0m [32m INFO[0m Protocol: MCP over stdio
+[2m2025-10-28T14:11:17.712779Z[0m [32m INFO[0m Waiting for initialize...
+[2m2025-10-28T14:11:17.712796Z[0m [32m INFO[0m Server initialized
+[2m2025-10-28T14:11:17.713131Z[0m [32m INFO[0m Stdio closed, server exiting

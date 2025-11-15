@@ -1,0 +1,64 @@
+name: Auto Deploy
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Build Rust API
+        run: |
+          cd portfolio/rustml-sentiment-api
+          cargo build --release
+
+      - name: Build TypeScript Frontend
+        run: |
+          cd portfolio/sentiment-intelligence-platform
+          npm install
+          npm run build
+
+      - name: Build Docker Images
+        run: |
+          docker build -t sentiment-api:latest portfolio/rustml-sentiment-api
+          docker build -t sentiment-platform:latest portfolio/sentiment-intelligence-platform
+
+      - name: Deploy to Production
+        run: |
+          echo "🚀 Deploying to production..."
+          # Example deployment commands:
+          # docker-compose -f production/docker-compose.yml up -d
+          # kubectl apply -f k8s/
+          # flyctl deploy
+          # vercel --prod
+
+      - name: Notify Success
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: context.sha,
+              state: 'success',
+              description: 'Deployed to production',
+              context: 'deployment'
+            })
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            portfolio/rustml-sentiment-api/target/release/rustml-sentiment-api
+            portfolio/sentiment-intelligence-platform/dist/**

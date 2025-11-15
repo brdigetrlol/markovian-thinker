@@ -1,0 +1,109 @@
+{
+  "version": "1.0",
+  "description": "Proactive workflow triggers for Claude Code automation",
+  "workflows": [
+    {
+      "name": "feature-implement",
+      "trigger_patterns": [
+        "implement.*feature",
+        "add.*functionality",
+        "create.*new.*feature",
+        "build.*feature",
+        "need.*to add",
+        "can you implement",
+        "add support for"
+      ],
+      "auto_engage": true,
+      "priority": "high",
+      "command_file": ".claude/commands/feature-implement.md"
+    },
+    {
+      "name": "optimize-performance",
+      "trigger_patterns": [
+        "slow",
+        "performance",
+        "optimize",
+        "speed up",
+        "faster",
+        "bottleneck",
+        "taking too long",
+        "improve.*performance"
+      ],
+      "auto_engage": true,
+      "priority": "high",
+      "command_file": ".claude/commands/optimize-performance.md",
+      "proactive_checks": [
+        "After implementing major features",
+        "When benchmarks are available",
+        "When user mentions performance concerns"
+      ]
+    },
+    {
+      "name": "portfolio-generator",
+      "trigger_patterns": [
+        "portfolio.*content",
+        "upwork.*portfolio",
+        "showcase.*project",
+        "portfolio.*entry",
+        "create.*portfolio"
+      ],
+      "auto_engage": true,
+      "priority": "medium",
+      "command_file": ".claude/commands/portfolio-generator.md",
+      "proactive_checks": [
+        "After completing a significant project",
+        "When user mentions Upwork or freelancing"
+      ]
+    },
+    {
+      "name": "proposal-writer",
+      "trigger_patterns": [
+        "upwork.*job",
+        "write.*proposal",
+        "apply.*to.*job",
+        "job.*posting",
+        "proposal.*for"
+      ],
+      "auto_engage": true,
+      "priority": "medium",
+      "command_file": ".claude/commands/proposal-writer.md"
+    },
+    {
+      "name": "market-intelligence",
+      "trigger_patterns": [
+        "what.*should.*build.*next",
+        "market.*research",
+        "trending.*projects",
+        "portfolio.*gaps",
+        "next.*project",
+        "market.*opportunities"
+      ],
+      "auto_engage": true,
+      "priority": "low",
+      "command_file": ".claude/commands/market-intelligence.md",
+      "proactive_checks": [
+        "When portfolio analysis is requested",
+        "Periodically suggest market opportunities"
+      ]
+    }
+  ],
+  "proactive_behaviors": {
+    "suggest_optimization": {
+      "enabled": true,
+      "after_feature_implementation": true,
+      "description": "Automatically suggest performance optimization after implementing features"
+    },
+    "suggest_portfolio_update": {
+      "enabled": true,
+      "after_major_commits": true,
+      "description": "Suggest creating portfolio content after significant project milestones"
+    },
+    "suggest_testing": {
+      "enabled": true,
+      "after_code_changes": true,
+      "description": "Automatically run tests after code changes"
+    }
+  },
+  "integration_mode": "proactive",
+  "requires_confirmation": false
+}
