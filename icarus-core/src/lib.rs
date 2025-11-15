@@ -24,6 +24,7 @@ pub mod event_bus;
 pub mod mcp;
 pub mod vulkan_renderer;
 pub mod tic;  // TIC (Topological Information Crystallography) substrate
+pub mod learning;  // Knowledge distillation & skill acquisition
 
 // Re-export core types
 pub use config::IcarusConfig;
@@ -35,6 +36,7 @@ pub use event_bus::EventBus;
 pub use mcp::IcarusMCPServer;
 pub use vulkan_renderer::{VulkanRenderer, CognitiveVisualization};
 pub use tic::TICSubstrate;
+pub use learning::{Skill, SkillLibrary, SkillDomain, Interaction, StrategyExtractor};
 
 use anyhow::Result;
 use std::sync::Arc;
