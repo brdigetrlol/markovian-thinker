@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "markovian-thinker": {
+      "command": "/home/user/markovian-thinker/target/release/markovian-thinker",
+      "description": "Markovian Thinker - Chunk-based reasoning with bounded context for linear complexity"
+    }
+  }
+}
