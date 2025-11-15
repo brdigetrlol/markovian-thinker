@@ -49,6 +49,10 @@ dotenv = "0.15.0"
 # HTTP server (for MCP over HTTP)
 hyper = { version = "0.14", features = ["full"] }
 
+# Terminal UI
+ratatui = "0.28"
+crossterm = "0.28"
+
 [features]
 default = []  # Start with minimal features
 # GPU compute via CUDA
@@ -79,3 +83,7 @@ path = "src/bin/icarus-autonomous.rs"
 [[bin]]
 name = "icarus-mcp-http"
 path = "src/bin/icarus-mcp-http.rs"
+
+[[bin]]
+name = "icarus-learn"
+path = "src/bin/icarus-learn.rs"
