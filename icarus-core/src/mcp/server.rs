@@ -3,6 +3,7 @@
 use super::protocol::*;
 use super::stdio::StdioHandler;
 use crate::{AgentSystem, MemoryHierarchy, NeuralCore, WorldModel, IcarusCore, IcarusConfig};
+use crate::learning::{SkillLibrary, Interaction, StrategyExtractor};
 use anyhow::Result;
 use serde_json::json;
 use std::sync::Arc;
@@ -16,6 +17,8 @@ pub struct IcarusMCPServer {
     icarus: Arc<RwLock<Option<IcarusCore>>>,
     /// Server initialized flag
     initialized: bool,
+    /// Skill library for knowledge distillation
+    skill_library: Arc<SkillLibrary>,
 }
 
 impl IcarusMCPServer {
@@ -28,6 +31,7 @@ impl IcarusMCPServer {
             },
             icarus: Arc::new(RwLock::new(None)),
             initialized: false,
+            skill_library: Arc::new(SkillLibrary::new()),
         }
     }
 
@@ -235,6 +239,38 @@ impl IcarusMCPServer {
                     "required": []
                 }),
             },
+            Tool {
+                name: "icarus_learn_from_interaction".to_string(),
+                description: "Teach Icarus by providing an interaction showing problem-solving approach. Icarus will extract strategies and build reusable skills.".to_string(),
+                input_schema: json!({
+                    "type": "object",
+                    "properties": {
+                        "problem": {
+                            "type": "string",
+                            "description": "Description of the problem that was solved"
+                        },
+                        "reasoning": {
+                            "type": "array",
+                            "description": "Step-by-step reasoning process used to solve the problem",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "solution": {
+                            "type": "string",
+                            "description": "The final solution or outcome"
+                        },
+                        "context": {
+                            "type": "object",
+                            "description": "Additional context (tags, metadata, related concepts)",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "required": ["problem", "reasoning", "solution"]
+                }),
+            },
         ];
 
         let result = ListToolsResult { tools };
@@ -261,6 +297,7 @@ impl IcarusMCPServer {
             "icarus_query_world_model" => self.handle_query_world_model(params.arguments).await,
             "icarus_execute_action" => self.handle_execute_action(params.arguments).await,
             "icarus_neural_state" => self.handle_neural_state(params.arguments).await,
+            "icarus_learn_from_interaction" => self.handle_learn_from_interaction(params.arguments).await,
             _ => CallToolResult {
                 content: vec![Content::Text {
                     text: format!("Unknown tool: {}", params.name),
@@ -396,6 +433,123 @@ impl IcarusMCPServer {
                 text: "Neural state query not yet implemented. Building neural core...".to_string(),
             }],
             is_error: Some(false),
+        }
+    }
+
+    async fn handle_learn_from_interaction(&self, args: serde_json::Value) -> CallToolResult {
+        // Parse arguments
+        let problem = match args.get("problem").and_then(|v| v.as_str()) {
+            Some(p) => p.to_string(),
+            None => {
+                return CallToolResult {
+                    content: vec![Content::Text {
+                        text: "Error: 'problem' field is required".to_string(),
+                    }],
+                    is_error: Some(true),
+                };
+            }
+        };
+
+        let reasoning = match args.get("reasoning").and_then(|v| v.as_array()) {
+            Some(arr) => arr
+                .iter()
+                .filter_map(|v| v.as_str().map(|s| s.to_string()))
+                .collect::<Vec<String>>(),
+            None => {
+                return CallToolResult {
+                    content: vec![Content::Text {
+                        text: "Error: 'reasoning' field is required and must be an array of strings".to_string(),
+                    }],
+                    is_error: Some(true),
+                };
+            }
+        };
+
+        let solution = match args.get("solution").and_then(|v| v.as_str()) {
+            Some(s) => s.to_string(),
+            None => {
+                return CallToolResult {
+                    content: vec![Content::Text {
+                        text: "Error: 'solution' field is required".to_string(),
+                    }],
+                    is_error: Some(true),
+                };
+            }
+        };
+
+        let context = args
+            .get("context")
+            .and_then(|v| v.as_object())
+            .map(|obj| {
+                obj.iter()
+                    .filter_map(|(k, v)| v.as_str().map(|s| (k.clone(), s.to_string())))
+                    .collect()
+            })
+            .unwrap_or_default();
+
+        // Create interaction
+        let interaction = Interaction {
+            id: uuid::Uuid::new_v4().to_string(),
+            timestamp: chrono::Utc::now(),
+            problem,
+            claude_reasoning: reasoning,
+            solution,
+            context,
+        };
+
+        // Extract skill
+        match StrategyExtractor::extract_skill(&interaction) {
+            Ok(Some(skill)) => {
+                let skill_id = skill.id.clone();
+                let skill_name = skill.name.clone();
+                let skill_domain = format!("{:?}", skill.domain);
+
+                // Add to library
+                if let Err(e) = self.skill_library.add_skill(skill).await {
+                    return CallToolResult {
+                        content: vec![Content::Text {
+                            text: format!("Error adding skill to library: {}", e),
+                        }],
+                        is_error: Some(true),
+                    };
+                }
+
+                // Get statistics
+                let stats = self.skill_library.get_statistics().await;
+
+                CallToolResult {
+                    content: vec![Content::Text {
+                        text: json!({
+                            "success": true,
+                            "message": "Successfully learned from interaction",
+                            "skill": {
+                                "id": skill_id,
+                                "name": skill_name,
+                                "domain": skill_domain
+                            },
+                            "library_stats": stats
+                        })
+                        .to_string(),
+                    }],
+                    is_error: Some(false),
+                }
+            }
+            Ok(None) => CallToolResult {
+                content: vec![Content::Text {
+                    text: json!({
+                        "success": false,
+                        "message": "Could not extract a meaningful skill from this interaction. Try providing more detailed reasoning steps or a clearer problem statement."
+                    })
+                    .to_string(),
+                }],
+                is_error: Some(false),
+            },
+            Err(e) => CallToolResult {
+                content: vec![Content::Text {
+                    text: format!("Error extracting skill: {}", e),
+                }],
+                is_error: Some(true),
+            },
         }
     }
 }
