@@ -10,6 +10,10 @@
       "env": {
         "H2CE_INDEX_PATH": "/home/user/.h2ce_index"
       }
+    },
+    "icarus": {
+      "command": "/home/user/markovian-thinker/icarus-core/target/release/icarus-mcp",
+      "description": "Icarus - Novel cognitive AI architecture with 6-agent system, hierarchical memory, and SSM/Liquid/RNN neural core"
     }
   }
 }

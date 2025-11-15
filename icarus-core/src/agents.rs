@@ -352,7 +352,8 @@ struct PlanningAgent {
     memory: Arc<RwLock<MemoryHierarchy>>,
     neural_core: Arc<RwLock<NeuralCore>>,
     event_receiver: Option<broadcast::Receiver<IcarusEvent>>,
-    session_manager: Arc<RwLock<markovian_thinker::SessionManager>>,
+    // TODO: Integrate markovian-thinker SessionManager once it's publicly exported
+    // session_manager: Arc<RwLock<markovian_thinker::SessionManager>>,
 }
 
 impl PlanningAgent {
@@ -361,15 +362,15 @@ impl PlanningAgent {
         memory: Arc<RwLock<MemoryHierarchy>>,
         neural_core: Arc<RwLock<NeuralCore>>,
     ) -> Self {
-        // Create session manager for complex planning/reasoning tasks
-        let session_manager = markovian_thinker::SessionManager::new();
+        // TODO: Create session manager for complex planning/reasoning tasks
+        // let session_manager = markovian_thinker::SessionManager::new();
 
         Self {
             event_bus,
             memory,
             neural_core,
             event_receiver: None,
-            session_manager: Arc::new(RwLock::new(session_manager)),
+            // session_manager: Arc::new(RwLock::new(session_manager)),
         }
     }
 }
