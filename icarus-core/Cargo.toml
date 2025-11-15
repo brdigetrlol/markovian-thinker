@@ -40,10 +40,10 @@ vulkano = { version = "0.34", optional = true }
 vulkano-shaders = { version = "0.34", optional = true }
 
 # Integration with markovian-thinker
-markovian_thinker = { path = "../markovian-thinker" }
+markovian_thinker = { path = ".." }
 
 # H²CE semantic search integration
-h2ce = { path = "../H2CE", optional = true }
+h2ce = { path = "../../H2CE", optional = true }
 dotenv = "0.15.0"
 
 # HTTP server (for MCP over HTTP)

@@ -40,14 +40,14 @@ regex = "1.10"
 rand = "0.8"
 
 # Phase 8: Icarus Integration - H2CE semantic search (optional)
-h2ce = { path = "../H2CE", optional = true }
+# h2ce = { path = "../H2CE", optional = true }
 
 [features]
 default = []
 # Enable H2CE semantic search integration
-h2ce-integration = ["h2ce"]
+# h2ce-integration = ["h2ce"]
 # Enable full Icarus TIC system (all integrations)
-icarus = ["h2ce-integration"]
+# icarus = ["h2ce-integration"]
 
 [dev-dependencies]
 tokio-test = "0.4"
@@ -58,11 +58,11 @@ criterion = { version = "0.5", features = ["html_reports"] }
 name = "markovian-thinker"
 path = "src/main.rs"
 
-[[bench]]
-name = "storm_mitigation_bench"
-harness = false
+# [[bench]]
+# name = "storm_mitigation_bench"
+# harness = false
 
-[[bench]]
-name = "phase7_benchmarks"
-harness = false
+# [[bench]]
+# name = "phase7_benchmarks"
+# harness = false
 
