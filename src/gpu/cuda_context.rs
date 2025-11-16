@@ -54,10 +54,10 @@ impl CudaContext {
         let device = CudaDevice::new(device_id)
             .context("Failed to initialize CUDA device")?;
 
-        info!("CUDA device initialized: {} (compute capability {}.{})",
-              device.name().unwrap_or("Unknown"),
-              device.attribute(cudarc::driver::sys::CUdevice_attribute_enum::CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR)?,
-              device.attribute(cudarc::driver::sys::CUdevice_attribute_enum::CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR)?);
+        // Get compute capability
+        let cc_major = device.attribute(cudarc::driver::sys::CUdevice_attribute_enum::CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR)?;
+        let cc_minor = device.attribute(cudarc::driver::sys::CUdevice_attribute_enum::CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR)?;
+        info!("CUDA device initialized (compute capability {}.{})", cc_major, cc_minor);
 
         // Create CUDA streams
         debug!("Creating {} CUDA streams", num_streams);
@@ -69,15 +69,17 @@ impl CudaContext {
             })
             .collect::<Result<Vec<_>>>()?;
 
+        // device is already Arc<CudaDevice> in cudarc 0.9
+        let device_arc = device;
+
         // Initialize cuBLAS for matrix operations
-        let cublas = CudaBlas::new(device.clone())
+        let cublas = CudaBlas::new(device_arc.clone())
             .context("Failed to initialize cuBLAS")?;
 
         // Create memory pool
-        let memory_pool = MemoryPool::new(device.clone())?;
+        let memory_pool = MemoryPool::new(device_arc.clone())?;
 
         // Load CUDA kernels
-        let device_arc = Arc::new(device);
         let kernel_registry = KernelRegistry::load(&device_arc)
             .context("Failed to load CUDA kernels")?;
 
@@ -119,7 +121,7 @@ impl CudaContext {
     }
 
     /// Copy data from host to device asynchronously
-    pub async fn copy_to_device<T: Clone>(
+    pub async fn copy_to_device<T: Clone + Unpin>(
         &self,
         data: &[T],
         stream_idx: usize,
@@ -148,20 +150,16 @@ impl CudaContext {
             .context("Failed to copy data from device")
     }
 
-    /// Synchronize a specific stream
-    pub fn synchronize_stream(&self, stream_idx: usize) -> Result<()> {
-        let stream = self.get_stream(stream_idx)?;
-        stream.synchronize()
-            .context("Failed to synchronize stream")
+    /// Synchronize a specific stream (in cudarc 0.9, synchronizes the whole device)
+    pub fn synchronize_stream(&self, _stream_idx: usize) -> Result<()> {
+        self.device.synchronize()
+            .context("Failed to synchronize device")
     }
 
-    /// Synchronize all streams
+    /// Synchronize all streams (in cudarc 0.9, synchronizes the whole device)
     pub fn synchronize_all(&self) -> Result<()> {
-        for (i, stream) in self.streams.iter().enumerate() {
-            stream.synchronize()
-                .context(format!("Failed to synchronize stream {}", i))?;
-        }
-        Ok(())
+        self.device.synchronize()
+            .context("Failed to synchronize device")
     }
 
     /// Synchronize the device (wait for all operations to complete)
@@ -172,10 +170,12 @@ impl CudaContext {
 
     /// Get device information
     pub fn device_info(&self) -> DeviceInfo {
+        // In cudarc 0.9.15, device doesn't have name/memory methods
+        // Use placeholders for now
         DeviceInfo {
-            name: self.device.name().unwrap_or_else(|_| "Unknown".to_string()),
-            total_memory: self.device.total_memory().unwrap_or(0),
-            free_memory: self.device.free_memory().unwrap_or(0),
+            name: "CUDA Device".to_string(),
+            total_memory: 0,
+            free_memory: 0,
             compute_capability: (
                 self.device.attribute(cudarc::driver::sys::CUdevice_attribute_enum::CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR).unwrap_or(0),
                 self.device.attribute(cudarc::driver::sys::CUdevice_attribute_enum::CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR).unwrap_or(0),

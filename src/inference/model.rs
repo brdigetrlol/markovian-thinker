@@ -161,7 +161,7 @@ impl InferenceModel {
         )?;
 
         // Synchronize
-        stream.synchronize()?;
+        device.synchronize()?;
 
         // Copy results back
         let output_embeddings = device.dtoh_sync_copy(&output_gpu)?;

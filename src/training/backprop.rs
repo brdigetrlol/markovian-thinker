@@ -2,6 +2,7 @@
 
 use anyhow::Result;
 use std::collections::HashMap;
+use std::sync::Arc;
 
 #[cfg(feature = "gpu")]
 use crate::gpu::CudaContext;

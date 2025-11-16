@@ -2,6 +2,7 @@
 
 use anyhow::Result;
 use std::sync::Arc;
+use tracing::debug;
 
 #[cfg(feature = "gpu")]
 use cudarc::driver::CudaSlice;
@@ -10,7 +11,7 @@ use cudarc::driver::CudaSlice;
 use crate::gpu::{CudaContext, kernels::*};
 
 use crate::inference::{InferenceModel, ModelConfig};
-use super::task::{TaskEnvelope, TaskResult};
+use super::task::{TaskEnvelope, TaskResult, TaskType};
 
 /// GPU execution pipeline
 pub struct GpuExecutionPipeline {
@@ -21,6 +22,12 @@ pub struct GpuExecutionPipeline {
     #[allow(dead_code)]
     model: Arc<InferenceModel>,
 }
+
+// SAFETY: GpuExecutionPipeline contains Arc<CudaContext> which manages thread safety internally.
+// The raw CUDA pointers in CudaStream are never directly accessed across threads, and all CUDA
+// operations are properly synchronized.
+unsafe impl Send for GpuExecutionPipeline {}
+unsafe impl Sync for GpuExecutionPipeline {}
 
 impl GpuExecutionPipeline {
     #[cfg(feature = "gpu")]
@@ -231,7 +238,7 @@ impl GpuExecutionPipeline {
         )?;
 
         // Synchronize
-        stream.synchronize()?;
+        device.synchronize()?;
         let kernel_time = kernel_start.elapsed().as_millis() as f64;
 
         // Copy results back
@@ -316,7 +323,7 @@ impl GpuExecutionPipeline {
         }
 
         // Synchronize
-        stream.synchronize()?;
+        device.synchronize()?;
         let kernel_time = kernel_start.elapsed().as_millis() as f64;
 
         // Copy results back

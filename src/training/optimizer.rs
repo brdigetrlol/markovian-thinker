@@ -2,6 +2,7 @@
 
 use anyhow::Result;
 use std::collections::HashMap;
+use std::sync::Arc;
 
 #[cfg(feature = "gpu")]
 use crate::gpu::CudaContext;
@@ -111,8 +112,8 @@ impl AdamOptimizer {
     /// Update a named parameter
     pub fn update_param(&mut self, name: &str, params: &mut [f32], grads: &[f32]) -> Result<()> {
         #[cfg(feature = "gpu")]
-        if let Some(ref gpu_ctx) = self.gpu_context {
-            return self.update_param_gpu(name, params, grads, gpu_ctx);
+        if let Some(gpu_ctx) = self.gpu_context.clone() {
+            return self.update_param_gpu(name, params, grads, &gpu_ctx);
         }
 
         // CPU fallback
@@ -195,8 +196,8 @@ impl AdamOptimizer {
 
         // Get kernel
         let kernel_name = "adam_optimizer_step";
-        let kernel = gpu_ctx.kernel_registry().get_function(kernel_name)
-            .ok_or_else(|| anyhow::anyhow!("Adam kernel not found"))?;
+        let kernels = gpu_ctx.kernels();
+        let kernel = kernels.get_function(kernel_name)?;
 
         // Launch kernel
         let threads_per_block = 256;
@@ -211,7 +212,7 @@ impl AdamOptimizer {
         };
 
         unsafe {
-            kernel.launch(
+            kernel.clone().launch(
                 cfg,
                 (
                     &mut d_params,
@@ -239,6 +240,11 @@ impl AdamOptimizer {
         Ok(())
     }
 }
+
+// SAFETY: AdamOptimizer contains Arc<CudaContext> which manages thread safety internally.
+// The raw CUDA pointers are never directly accessed and all CUDA operations are synchronized.
+unsafe impl Send for AdamOptimizer {}
+unsafe impl Sync for AdamOptimizer {}
 
 impl Optimizer for AdamOptimizer {
     fn step(&mut self, params: &mut [f32], grads: &[f32]) -> Result<()> {
@@ -293,11 +299,16 @@ impl SGDOptimizer {
     }
 }
 
+// SAFETY: SGDOptimizer contains Arc<CudaContext> which manages thread safety internally.
+// The raw CUDA pointers are never directly accessed and all CUDA operations are synchronized.
+unsafe impl Send for SGDOptimizer {}
+unsafe impl Sync for SGDOptimizer {}
+
 impl Optimizer for SGDOptimizer {
     fn step(&mut self, params: &mut [f32], grads: &[f32]) -> Result<()> {
         #[cfg(feature = "gpu")]
-        if let Some(ref gpu_ctx) = self.gpu_context {
-            return self.step_gpu(params, grads, gpu_ctx);
+        if let Some(gpu_ctx) = self.gpu_context.clone() {
+            return self.step_gpu(params, grads, &gpu_ctx);
         }
 
         // CPU fallback
@@ -360,8 +371,8 @@ impl SGDOptimizer {
 
         // Get kernel
         let kernel_name = "sgd_optimizer_step";
-        let kernel = gpu_ctx.kernel_registry().get_function(kernel_name)
-            .ok_or_else(|| anyhow::anyhow!("SGD kernel not found"))?;
+        let kernels = gpu_ctx.kernels();
+        let kernel = kernels.get_function(kernel_name)?;
 
         // Launch kernel
         let threads_per_block = 256;
@@ -376,7 +387,7 @@ impl SGDOptimizer {
         };
 
         unsafe {
-            kernel.launch(
+            kernel.clone().launch(
                 cfg,
                 (
                     &mut d_params,

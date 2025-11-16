@@ -4,7 +4,7 @@
 //! Kernels are compiled from CUDA C++ (.cu files) to PTX and loaded at runtime.
 
 use anyhow::{Context, Result};
-use cudarc::driver::{CudaDevice, CudaFunction, CudaSlice, CudaStream, LaunchAsync, LaunchConfig};
+use cudarc::driver::{CudaDevice, CudaFunction, CudaSlice, CudaStream, LaunchConfig, LaunchAsync};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tracing::{debug, info};
@@ -85,34 +85,8 @@ impl KernelRegistry {
             .ok_or_else(|| anyhow::anyhow!("Kernel function '{}' not found", name))
     }
 
-    /// Launch a kernel by name with parameters
-    pub fn launch(
-        &self,
-        kernel_name: &str,
-        grid_dim: (u32, u32, u32),
-        block_dim: (u32, u32, u32),
-        stream: &CudaStream,
-        params: &[*const std::ffi::c_void],
-    ) -> Result<()> {
-        let func = self.get_function(kernel_name)?;
-
-        debug!(
-            "Launching kernel '{}' with grid {:?}, block {:?}",
-            kernel_name, grid_dim, block_dim
-        );
-
-        let config = LaunchConfig {
-            grid_dim,
-            block_dim,
-            shared_mem_bytes: 0,
-        };
-
-        unsafe {
-            func.clone().launch(config, params)?;
-        }
-
-        Ok(())
-    }
+    // Note: Direct kernel launching via func.launch() with tuples is now done
+    // in each kernel launcher struct to properly type the parameters
 }
 
 /// Kernel launcher for batch token processing
@@ -156,24 +130,21 @@ impl BatchTokenProcessKernel {
             batch_size, seq_len, embed_dim
         );
 
-        // Prepare kernel parameters
-        let params = [
-            &input.device_ptr() as *const _ as *const std::ffi::c_void,
-            &output.device_ptr() as *const _ as *const std::ffi::c_void,
-            &gamma.device_ptr() as *const _ as *const std::ffi::c_void,
-            &beta.device_ptr() as *const _ as *const std::ffi::c_void,
-            &batch_size as *const _ as *const std::ffi::c_void,
-            &seq_len as *const _ as *const std::ffi::c_void,
-            &embed_dim as *const _ as *const std::ffi::c_void,
-        ];
+        // Get kernel function and launch with params as tuple
+        let func = self.registry.get_function("batch_token_process")?;
 
-        self.registry.launch(
-            "batch_token_process",
+        let config = LaunchConfig {
             grid_dim,
             block_dim,
-            stream,
-            &params,
-        )
+            shared_mem_bytes: 0,
+        };
+
+        unsafe {
+            func.clone().launch(config, (input, output, gamma, beta, batch_size, seq_len, embed_dim))
+                .context("Failed to launch batch_token_process kernel")?;
+        }
+
+        Ok(())
     }
 }
 
@@ -216,25 +187,20 @@ impl BatchAttentionKernel {
             batch_size, num_heads, seq_len, head_dim
         );
 
-        let params = [
-            &queries.device_ptr() as *const _ as *const std::ffi::c_void,
-            &keys.device_ptr() as *const _ as *const std::ffi::c_void,
-            &values.device_ptr() as *const _ as *const std::ffi::c_void,
-            &output.device_ptr() as *const _ as *const std::ffi::c_void,
-            &attention_scores.device_ptr() as *const _ as *const std::ffi::c_void,
-            &batch_size as *const _ as *const std::ffi::c_void,
-            &num_heads as *const _ as *const std::ffi::c_void,
-            &seq_len as *const _ as *const std::ffi::c_void,
-            &head_dim as *const _ as *const std::ffi::c_void,
-        ];
+        let func = self.registry.get_function("batch_multi_head_attention")?;
 
-        self.registry.launch(
-            "batch_multi_head_attention",
+        let config = LaunchConfig {
             grid_dim,
             block_dim,
-            stream,
-            &params,
-        )
+            shared_mem_bytes: 0,
+        };
+
+        unsafe {
+            func.clone().launch(config, (queries, keys, values, output, attention_scores, batch_size, num_heads, seq_len, head_dim))
+                .context("Failed to launch batch_multi_head_attention kernel")?;
+        }
+
+        Ok(())
     }
 }
 
@@ -271,26 +237,20 @@ impl SSMSelectiveScanKernel {
             batch_size, seq_len, d_model, d_state
         );
 
-        let params = [
-            &input.device_ptr() as *const _ as *const std::ffi::c_void,
-            &delta.device_ptr() as *const _ as *const std::ffi::c_void,
-            &a.device_ptr() as *const _ as *const std::ffi::c_void,
-            &b.device_ptr() as *const _ as *const std::ffi::c_void,
-            &c.device_ptr() as *const _ as *const std::ffi::c_void,
-            &output.device_ptr() as *const _ as *const std::ffi::c_void,
-            &batch_size as *const _ as *const std::ffi::c_void,
-            &seq_len as *const _ as *const std::ffi::c_void,
-            &d_model as *const _ as *const std::ffi::c_void,
-            &d_state as *const _ as *const std::ffi::c_void,
-        ];
+        let func = self.registry.get_function("ssm_selective_scan")?;
 
-        self.registry.launch(
-            "ssm_selective_scan",
+        let config = LaunchConfig {
             grid_dim,
             block_dim,
-            stream,
-            &params,
-        )
+            shared_mem_bytes: 0,
+        };
+
+        unsafe {
+            func.clone().launch(config, (input, delta, a, b, c, output, batch_size, seq_len, d_model, d_state))
+                .context("Failed to launch ssm_selective_scan kernel")?;
+        }
+
+        Ok(())
     }
 }
 
@@ -322,21 +282,20 @@ impl DataTransformKernel {
             batch_size, array_size, factor
         );
 
-        let params = [
-            &input.device_ptr() as *const _ as *const std::ffi::c_void,
-            &output.device_ptr() as *const _ as *const std::ffi::c_void,
-            &factor as *const _ as *const std::ffi::c_void,
-            &batch_size as *const _ as *const std::ffi::c_void,
-            &array_size as *const _ as *const std::ffi::c_void,
-        ];
+        let func = self.registry.get_function("data_transform")?;
 
-        self.registry.launch(
-            "data_transform",
+        let config = LaunchConfig {
             grid_dim,
             block_dim,
-            stream,
-            &params,
-        )
+            shared_mem_bytes: 0,
+        };
+
+        unsafe {
+            func.clone().launch(config, (input, output, factor, batch_size, array_size))
+                .context("Failed to launch data_transform kernel")?;
+        }
+
+        Ok(())
     }
 }
 
@@ -369,22 +328,20 @@ impl AgentSimulationKernel {
             num_agents, dt
         );
 
-        let params = [
-            &positions.device_ptr() as *const _ as *const std::ffi::c_void,
-            &velocities.device_ptr() as *const _ as *const std::ffi::c_void,
-            &states.device_ptr() as *const _ as *const std::ffi::c_void,
-            &env_params.device_ptr() as *const _ as *const std::ffi::c_void,
-            &num_agents as *const _ as *const std::ffi::c_void,
-            &dt as *const _ as *const std::ffi::c_void,
-        ];
+        let func = self.registry.get_function("agent_simulation_step")?;
 
-        self.registry.launch(
-            "agent_simulation_step",
-            (grid_size, 1, 1),
-            (block_size, 1, 1),
-            stream,
-            &params,
-        )
+        let config = LaunchConfig {
+            grid_dim: (grid_size, 1, 1),
+            block_dim: (block_size, 1, 1),
+            shared_mem_bytes: 0,
+        };
+
+        unsafe {
+            func.clone().launch(config, (positions, velocities, states, env_params, num_agents, dt))
+                .context("Failed to launch agent_simulation_step kernel")?;
+        }
+
+        Ok(())
     }
 }
 

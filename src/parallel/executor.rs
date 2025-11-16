@@ -10,6 +10,9 @@ use crate::gpu::CudaContext;
 use super::batch::{BatchConfig, BatchQueue, QueueStats};
 use super::task::{Task, TaskEnvelope, TaskResult};
 
+#[cfg(feature = "gpu")]
+use super::gpu_executor::GpuExecutionPipeline;
+
 /// Parallel executor for GPU-accelerated task execution
 ///
 /// Manages task batching, GPU execution, and result distribution.
@@ -125,14 +128,14 @@ impl ParallelExecutor {
 
                         // Process batch
                         #[cfg(feature = "gpu")]
-                        let results = if let Some(ref pipeline) = gpu_pipe {
+                        let results: Result<Vec<TaskResult>> = if let Some(ref pipeline) = gpu_pipe {
                             pipeline.execute_batch(&batch, worker_id).await
                         } else {
                             Self::execute_batch_cpu(&batch).await
                         };
 
                         #[cfg(not(feature = "gpu"))]
-                        let results = Self::execute_batch_cpu(&batch).await;
+                        let results: Result<Vec<TaskResult>> = Self::execute_batch_cpu(&batch).await;
 
                         // Send results back
                         match results {

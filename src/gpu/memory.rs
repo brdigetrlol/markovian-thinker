@@ -25,6 +25,7 @@ pub struct MemoryPool {
 }
 
 /// Internal buffer representation
+#[derive(Clone)]
 struct Buffer {
     ptr: usize,
     size: usize,
@@ -71,11 +72,13 @@ impl MemoryPool {
         // Try to find a free buffer in the appropriate bucket
         if let Some(buffers) = self.free_buffers.get_mut(&bucket) {
             if let Some(buffer) = buffers.pop() {
-                trace!("Reusing buffer of size {} bytes from pool", buffer.size);
-                self.total_pooled -= buffer.size;
-                self.allocated_buffers.insert(buffer.ptr, buffer);
+                let buffer_ptr = buffer.ptr;
+                let buffer_size = buffer.size;
+                trace!("Reusing buffer of size {} bytes from pool", buffer_size);
+                self.total_pooled -= buffer_size;
+                self.allocated_buffers.insert(buffer_ptr, buffer);
                 return Ok(GpuBuffer {
-                    ptr: buffer.ptr,
+                    ptr: buffer_ptr,
                     size,
                     pool: None, // Will be set by caller if needed
                     _phantom: std::marker::PhantomData,
@@ -113,15 +116,16 @@ impl MemoryPool {
         let ptr = buffer.ptr;
 
         if let Some(buf) = self.allocated_buffers.remove(&ptr) {
-            let bucket = self.size_to_bucket(buf.size);
+            let buf_size = buf.size;
+            let bucket = self.size_to_bucket(buf_size);
 
             // Only pool the buffer if we haven't exceeded max pool size
-            if self.total_pooled + buf.size <= self.max_pool_size {
-                trace!("Returning buffer of size {} bytes to pool", buf.size);
+            if self.total_pooled + buf_size <= self.max_pool_size {
+                trace!("Returning buffer of size {} bytes to pool", buf_size);
                 self.free_buffers.entry(bucket).or_default().push(buf);
-                self.total_pooled += buf.size;
+                self.total_pooled += buf_size;
             } else {
-                debug!("Pool size limit reached, not pooling buffer of {} bytes", buf.size);
+                debug!("Pool size limit reached, not pooling buffer of {} bytes", buf_size);
                 // Buffer will be dropped and memory deallocated
             }
         }
@@ -181,12 +185,9 @@ impl<T> GpuBuffer<T> {
     }
 }
 
-impl<T> Drop for GpuBuffer<T>
-where
-    T: Clone + Default,
-{
+impl<T> Drop for GpuBuffer<T> {
     fn drop(&mut self) {
-        if let Some(pool) = &self.pool {
+        if let Some(_pool) = &self.pool {
             // Return buffer to pool
             // Note: This is simplified. In practice, you'd move ownership.
             trace!("Returning buffer to pool on drop");

@@ -1,5 +1,9 @@
 // build.rs - Compile CUDA kernels to PTX
 
+use std::env;
+use std::path::PathBuf;
+use std::process::Command;
+
 fn main() {
     #[cfg(feature = "gpu")]
     {
@@ -12,9 +16,6 @@ fn main() {
 
 #[cfg(feature = "gpu")]
 fn compile_cuda_kernels() {
-    use std::env;
-    use std::path::PathBuf;
-    use std::process::Command;
     let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
     let cuda_file = "cuda/parallel_kernels.cu";
 
