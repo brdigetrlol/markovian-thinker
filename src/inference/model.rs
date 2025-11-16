@@ -43,6 +43,12 @@ pub struct InferenceModel {
     gpu_context: Option<Arc<CudaContext>>,
 }
 
+// SAFETY: InferenceModel contains Arc<CudaContext> which manages thread safety internally.
+// The raw CUDA pointers in CudaStream are never directly accessed across threads, and all CUDA
+// operations are properly synchronized.
+unsafe impl Send for InferenceModel {}
+unsafe impl Sync for InferenceModel {}
+
 impl InferenceModel {
     /// Create a new inference model
     #[cfg(feature = "gpu")]

@@ -38,6 +38,12 @@ pub struct CudaContext {
     current_stream: Arc<RwLock<usize>>,
 }
 
+// SAFETY: CudaContext contains Arc<CudaDevice>, Arc<CudaStream>, and other Arc-wrapped types
+// which all manage thread safety internally. The raw CUDA pointers in CudaStream are never
+// directly accessed across threads, and all CUDA operations are properly synchronized.
+unsafe impl Send for CudaContext {}
+unsafe impl Sync for CudaContext {}
+
 impl CudaContext {
     /// Create a new CUDA context
     ///
