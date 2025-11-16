@@ -8,6 +8,22 @@
 // eliminating the need for the server to make its own API calls.
 
 pub mod mcp;
+pub mod gpu;
+pub mod parallel;
+pub mod inference;
+pub mod training;
 
 // Re-export core types for convenience
 pub use mcp::MarkovianMCPServer;
+
+#[cfg(feature = "gpu")]
+pub use parallel::{ParallelExecutor, Task, TaskType, TaskResult};
+#[cfg(feature = "gpu")]
+pub use gpu::CudaContext;
+
+pub use inference::{Tokenizer, EmbeddingLayer, InferenceModel, ModelConfig};
+pub use training::{
+    WeightLoader, WeightFormat,
+    Optimizer, AdamOptimizer, SGDOptimizer, OptimizerConfig,
+    BackpropEngine, OnlineLearner, LearningConfig,
+};

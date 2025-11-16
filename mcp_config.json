@@ -1,0 +1,9 @@
+{
+  "markovian-thinker": {
+    "command": "/mnt/c/Users/brdig/Documents/DriveSync/Software/repos-pxl/mcp/workspace/markovian-thinker/target/release/markovian-thinker",
+    "args": [],
+    "env": {
+      "RUST_LOG": "info"
+    }
+  }
+}
